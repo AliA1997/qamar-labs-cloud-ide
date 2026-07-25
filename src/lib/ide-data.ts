@@ -1,6 +1,6 @@
 export type IdeFile = {
   path: string;
-  language: "csharp" | "xml" | "json" | "markdown" | "yaml" | "typescript";
+  language: "csharp" | "xml" | "json" | "markdown" | "yaml" | "typescript" | "python" | "javascript";
   content: string;
 };
 
