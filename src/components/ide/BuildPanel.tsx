@@ -65,7 +65,25 @@ export function BuildPanel() {
             { kind: "out", text: "info: Microsoft.Hosting.Lifetime[14]" },
             { kind: "out", text: "      Now listening on: http://localhost:5000" },
             { kind: "ok", text: "Application started. Press Ctrl+C to shut down." }])}>
-          <Play className="size-3.5" /> Run API
+          <Play className="size-3.5" /> Run .NET
+        </Button>
+        <Button size="sm" variant="secondary" disabled={busy}
+          onClick={() => stream([
+            { kind: "info", text: "$ python python/scripts/etl.py --source fixtures/orders.csv" },
+            { kind: "out", text: "Reading fixtures/orders.csv ..." },
+            { kind: "out", text: "rows=1284 total=48219.55 avg=37.55" },
+            { kind: "ok", text: "Exit code 0 · 0.42s" },
+          ])}>
+          <Play className="size-3.5" /> Run Python
+        </Button>
+        <Button size="sm" variant="secondary" disabled={busy}
+          onClick={() => stream([
+            { kind: "info", text: "$ node node/scripts/server.js" },
+            { kind: "out", text: "listening on http://localhost:3000" },
+            { kind: "out", text: "GET / 200 4ms" },
+            { kind: "ok", text: "Server ready. Press Ctrl+C to stop." },
+          ])}>
+          <Play className="size-3.5" /> Run Node.js
         </Button>
         <div className="flex-1" />
         <Button size="sm" variant="ghost" onClick={() => setLines([])}>
