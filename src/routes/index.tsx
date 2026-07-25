@@ -1,24 +1,148 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { Code2, Zap, BookOpen, Terminal, Save, GitBranch, Boxes } from "lucide-react";
+import { STARTER_PROJECT, type IdeFile } from "@/lib/ide-data";
+import { FileTree } from "@/components/ide/FileTree";
+import { EditorPane } from "@/components/ide/EditorPane";
+import { BuildPanel } from "@/components/ide/BuildPanel";
+import { LambdaTester } from "@/components/ide/LambdaTester";
+import { DocsPanel } from "@/components/ide/DocsPanel";
+import { cn } from "@/lib/utils";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Nova IDE — .NET Projects, Lambda Testing & CLAUDE Docs" },
+      { name: "description", content: "A browser IDE for .NET projects with a Lambda tester and a full guide to building code editors — ready to become a CLAUDE.md spec." },
+      { property: "og:title", content: "Nova IDE" },
+      { property: "og:description", content: "Edit .NET, invoke Lambdas, and learn how to build your own IDE." },
+    ],
+  }),
+  component: NovaIde,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+type TopTab = "editor" | "lambda" | "docs";
+
+function NovaIde() {
+  const [files, setFiles] = useState<IdeFile[]>(STARTER_PROJECT);
+  const [openPaths, setOpenPaths] = useState<string[]>([
+    "src/HelloApi/Program.cs",
+    "src/OrderLambda/Function.cs",
+  ]);
+  const [activePath, setActivePath] = useState("src/HelloApi/Program.cs");
+  const [tab, setTab] = useState<TopTab>("editor");
+
+  const openFiles = openPaths
+    .map((p) => files.find((f) => f.path === p))
+    .filter((x): x is IdeFile => Boolean(x));
+
+  const openFile = (f: IdeFile) => {
+    setOpenPaths((prev) => (prev.includes(f.path) ? prev : [...prev, f.path]));
+    setActivePath(f.path);
+    setTab("editor");
+  };
+  const closeFile = (p: string) => {
+    setOpenPaths((prev) => {
+      const next = prev.filter((x) => x !== p);
+      if (activePath === p && next.length) setActivePath(next[next.length - 1]);
+      return next;
+    });
+  };
+  const changeFile = (p: string, v: string) => {
+    setFiles((prev) => prev.map((f) => (f.path === p ? { ...f, content: v } : f)));
+  };
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="flex h-screen w-full flex-col overflow-hidden bg-background text-foreground">
+      {/* Top bar */}
+      <header className="flex items-center gap-3 border-b border-border bg-panel px-4 py-2">
+        <div className="flex items-center gap-2">
+          <div className="grid size-7 place-items-center rounded-md bg-gradient-brand shadow-glow">
+            <Boxes className="size-4 text-primary-foreground" />
+          </div>
+          <div className="leading-tight">
+            <div className="text-sm font-semibold">Nova IDE</div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              .NET · Lambda · CLAUDE
+            </div>
+          </div>
+        </div>
+        <div className="mx-3 h-6 w-px bg-border" />
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <GitBranch className="size-3.5" />
+          <span className="font-mono">main</span>
+          <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-[10px] text-foreground/80">NovaIDE.sln</span>
+        </div>
+
+        <nav className="ml-6 flex items-center gap-1">
+          {([
+            { id: "editor", icon: Code2, label: "Editor" },
+            { id: "lambda", icon: Zap, label: "Lambda Tester" },
+            { id: "docs", icon: BookOpen, label: "Docs / CLAUDE" },
+          ] as const).map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] transition-colors",
+                tab === t.id
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+              )}
+            >
+              <t.icon className="size-3.5" />
+              {t.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+          <button className="flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:bg-accent">
+            <Save className="size-3.5" /> Save all
+          </button>
+          <div className="hidden items-center gap-1 rounded-md bg-secondary px-2 py-1 md:flex">
+            <span className="size-1.5 rounded-full bg-[color:var(--success)]" />
+            Runner online · us-east-1
+          </div>
+        </div>
+      </header>
+
+      {/* Body */}
+      <div className="min-h-0 flex-1">
+        {tab === "editor" && (
+          <div className="grid h-full grid-cols-[240px_1fr]">
+            <aside className="min-h-0 border-r border-border">
+              <div className="border-b border-border px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+                Explorer
+              </div>
+              <FileTree files={files} activePath={activePath} onOpen={openFile} />
+            </aside>
+            <div className="grid min-h-0 grid-rows-[1fr_260px]">
+              <EditorPane
+                openFiles={openFiles}
+                activePath={activePath}
+                onSelect={setActivePath}
+                onClose={closeFile}
+                onChange={changeFile}
+              />
+              <div className="min-h-0 border-t border-border">
+                <div className="flex items-center gap-4 border-b border-border bg-panel px-3 py-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <span className="flex items-center gap-1 text-foreground">
+                    <Terminal className="size-3.5" /> Runner
+                  </span>
+                  <span>Problems</span>
+                  <span>Output</span>
+                </div>
+                <div className="h-[calc(100%-30px)]">
+                  <BuildPanel />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {tab === "lambda" && <LambdaTester />}
+        {tab === "docs" && <DocsPanel />}
+      </div>
     </div>
   );
 }
