@@ -21,7 +21,12 @@ const TEST_STREAM: LogLine[] = [
   { kind: "out", text: "  Passed SmokeTests.Addition_Works [3 ms]" },
   { kind: "out", text: "  Passed SmokeTests.City_IsNotEmpty(city: \"Paris\") [1 ms]" },
   { kind: "out", text: "  Passed SmokeTests.City_IsNotEmpty(city: \"Tokyo\") [1 ms]" },
-  { kind: "ok", text: "Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3" },
+  { kind: "info", text: "$ pytest python/tests -q" },
+  { kind: "out", text: "..                                                                     [100%]" },
+  { kind: "out", text: "1 passed in 0.08s" },
+  { kind: "info", text: "$ node --test node/auth-lambda" },
+  { kind: "out", text: "✔ returns 200 with echoed body (12.4ms)" },
+  { kind: "ok", text: "All suites passed. Total: 5 passed, 0 failed." },
 ];
 
 const colorFor = (k: LogLine["kind"]) =>

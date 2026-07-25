@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const FUNCTIONS = [
   { id: "OrderLambda", handler: "OrderLambda::OrderLambda.Function::Handler", runtime: "dotnet8" },
   { id: "InvoiceLambda", handler: "InvoiceLambda::Invoice.Function::Process", runtime: "dotnet8" },
-  { id: "auth-node", handler: "index.handler", runtime: "nodejs20.x" },
+  { id: "report_lambda", handler: "handler.handler", runtime: "python3.12" },
+  { id: "auth-lambda", handler: "index.handler", runtime: "nodejs20.x" },
 ];
 
 const EVENT_TEMPLATES: Record<string, string> = {
