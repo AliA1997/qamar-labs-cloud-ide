@@ -43,8 +43,11 @@ function build(files: IdeFile[]): Node {
 function iconFor(name: string) {
   if (name.endsWith(".cs")) return <FileCode2 className="size-3.5 text-[color:var(--accent-violet)]" />;
   if (name.endsWith(".csproj") || name.endsWith(".sln")) return <FileType2 className="size-3.5 text-[color:var(--accent-cyan)]" />;
+  if (name.endsWith(".py")) return <FileCode2 className="size-3.5 text-warning" />;
+  if (name.endsWith(".js") || name.endsWith(".mjs")) return <FileCode2 className="size-3.5 text-[color:var(--success)]" />;
+  if (name.endsWith(".ts") || name.endsWith(".tsx")) return <FileCode2 className="size-3.5 text-[color:var(--accent-cyan)]" />;
   if (name.endsWith(".json")) return <FileJson className="size-3.5 text-warning" />;
-  if (name.endsWith(".md")) return <FileText className="size-3.5 text-muted-foreground" />;
+  if (name.endsWith(".md") || name.endsWith(".txt")) return <FileText className="size-3.5 text-muted-foreground" />;
   return <FileText className="size-3.5 text-muted-foreground" />;
 }
 

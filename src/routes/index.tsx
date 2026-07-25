@@ -63,7 +63,7 @@ function NovaIde() {
           <div className="leading-tight">
             <div className="text-sm font-semibold">Nova IDE</div>
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              .NET · Lambda · CLAUDE
+              .NET · Python · Node.js · Lambda
             </div>
           </div>
         </div>

@@ -21,7 +21,12 @@ const TEST_STREAM: LogLine[] = [
   { kind: "out", text: "  Passed SmokeTests.Addition_Works [3 ms]" },
   { kind: "out", text: "  Passed SmokeTests.City_IsNotEmpty(city: \"Paris\") [1 ms]" },
   { kind: "out", text: "  Passed SmokeTests.City_IsNotEmpty(city: \"Tokyo\") [1 ms]" },
-  { kind: "ok", text: "Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3" },
+  { kind: "info", text: "$ pytest python/tests -q" },
+  { kind: "out", text: "..                                                                     [100%]" },
+  { kind: "out", text: "1 passed in 0.08s" },
+  { kind: "info", text: "$ node --test node/auth-lambda" },
+  { kind: "out", text: "✔ returns 200 with echoed body (12.4ms)" },
+  { kind: "ok", text: "All suites passed. Total: 5 passed, 0 failed." },
 ];
 
 const colorFor = (k: LogLine["kind"]) =>
@@ -60,7 +65,25 @@ export function BuildPanel() {
             { kind: "out", text: "info: Microsoft.Hosting.Lifetime[14]" },
             { kind: "out", text: "      Now listening on: http://localhost:5000" },
             { kind: "ok", text: "Application started. Press Ctrl+C to shut down." }])}>
-          <Play className="size-3.5" /> Run API
+          <Play className="size-3.5" /> Run .NET
+        </Button>
+        <Button size="sm" variant="secondary" disabled={busy}
+          onClick={() => stream([
+            { kind: "info", text: "$ python python/scripts/etl.py --source fixtures/orders.csv" },
+            { kind: "out", text: "Reading fixtures/orders.csv ..." },
+            { kind: "out", text: "rows=1284 total=48219.55 avg=37.55" },
+            { kind: "ok", text: "Exit code 0 · 0.42s" },
+          ])}>
+          <Play className="size-3.5" /> Run Python
+        </Button>
+        <Button size="sm" variant="secondary" disabled={busy}
+          onClick={() => stream([
+            { kind: "info", text: "$ node node/scripts/server.js" },
+            { kind: "out", text: "listening on http://localhost:3000" },
+            { kind: "out", text: "GET / 200 4ms" },
+            { kind: "ok", text: "Server ready. Press Ctrl+C to stop." },
+          ])}>
+          <Play className="size-3.5" /> Run Node.js
         </Button>
         <div className="flex-1" />
         <Button size="sm" variant="ghost" onClick={() => setLines([])}>
