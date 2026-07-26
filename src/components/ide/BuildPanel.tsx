@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Play, TestTube2, Hammer, Trash2, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Template } from "./Launcher";
+import type { IdeFile } from "@/lib/ide-data";
+import { simulateCsharpConsole } from "@/lib/csharp-sim";
 
 type LogLine = { kind: "out" | "err" | "info" | "ok"; text: string };
 
@@ -31,21 +33,24 @@ type RunProfile = {
   stopLine?: LogLine;
 };
 
-function profileFor(t: Template): RunProfile {
+function profileFor(t: Template, files: IdeFile[]): RunProfile {
   switch (t.id) {
-    case "dotnet-console":
+    case "dotnet-console": {
+      const program = files.find((f) => f.path.endsWith("Program.cs"));
+      const sim = program ? simulateCsharpConsole(program.content) : { output: ["(no Program.cs found)"], ok: true as const };
+      const runLines: LogLine[] = [
+        { kind: "info", text: "$ dotnet run --project src/ConsoleApp" },
+        ...sim.output.map((line): LogLine => ({ kind: "out", text: line })),
+        { kind: sim.ok ? "ok" : "err", text: sim.ok ? "Process exited with code 0" : `Process exited with code 1: ${sim.error ?? ""}` },
+      ];
       return {
         label: ".NET Console",
         runLabel: "Run Console",
         build: BUILD_STREAM,
         test: TEST_STREAM,
-        run: [
-          { kind: "info", text: "$ dotnet run --project src/ConsoleApp" },
-          { kind: "out", text: "Hello from your new .NET console app!" },
-          { kind: "out", text: "Greetings, world." },
-          { kind: "ok", text: "Process exited with code 0" },
-        ],
+        run: runLines,
       };
+    }
     case "dotnet-webapi":
       return {
         label: "ASP.NET Core",
@@ -175,8 +180,8 @@ const colorFor = (k: LogLine["kind"]) =>
   : k === "info" ? "text-[color:var(--accent-cyan)]"
   : "text-foreground/85";
 
-export function BuildPanel({ template }: { template: Template }) {
-  const profile = profileFor(template);
+export function BuildPanel({ template, files }: { template: Template; files: IdeFile[] }) {
+  const profile = profileFor(template, files);
   const [lines, setLines] = useState<LogLine[]>([
     { kind: "info", text: `Nova runner ready for ${profile.label}. Try Build or ${profile.runLabel}.` },
   ]);
