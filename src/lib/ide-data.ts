@@ -318,3 +318,50 @@ export const SAMPLE_LAMBDA_EVENT = JSON.stringify(
   null,
   2,
 );
+
+const CONSOLE_APP: IdeFile[] = [
+  {
+    path: "src/ConsoleApp/Program.cs",
+    language: "csharp",
+    content: `Console.WriteLine("Hello from your new .NET console app!");
+
+var name = args.Length > 0 ? args[0] : "world";
+Console.WriteLine($"Greetings, {name}.");
+`,
+  },
+  {
+    path: "src/ConsoleApp/ConsoleApp.csproj",
+    language: "xml",
+    content: `<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ConsoleApp</RootNamespace>
+  </PropertyGroup>
+</Project>
+`,
+  },
+];
+
+const README = STARTER_PROJECT.find((f) => f.path === "README.md")!;
+
+function pick(prefixes: string[]): IdeFile[] {
+  return STARTER_PROJECT.filter((f) => prefixes.some((p) => f.path.startsWith(p)));
+}
+
+export function filesForTemplate(id: string): IdeFile[] {
+  switch (id) {
+    case "dotnet-console": return [...CONSOLE_APP, README];
+    case "dotnet-webapi": return [...pick(["src/HelloApi/"]), README];
+    case "dotnet-lambda": return [...pick(["src/OrderLambda/"]), README];
+    case "dotnet-xunit": return [...pick(["tests/HelloApi.Tests/"]), README];
+    case "python-lambda": return [...pick(["python/report_lambda/", "python/tests/"]), README];
+    case "python-script": return [...pick(["python/scripts/"]), README];
+    case "node-lambda": return [...pick(["node/auth-lambda/"]), README];
+    case "node-server": return [...pick(["node/scripts/"]), README];
+    default: return STARTER_PROJECT;
+  }
+}
+
