@@ -175,7 +175,7 @@ function IdeWorkspace({
                   <span>Output</span>
                 </div>
                 <div className="h-[calc(100%-30px)]">
-                  <BuildPanel template={template} />
+                  <BuildPanel template={template} files={files} />
                 </div>
               </div>
             </div>
