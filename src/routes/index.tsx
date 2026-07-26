@@ -16,8 +16,8 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "Nova IDE — Create a .NET, Python or Node.js Project" },
       { name: "description", content: "Search a template, spin up a workspace, and start coding in Nova IDE — the in-browser IDE for .NET, Python and Node.js." },
-      { property: "og:title", content: "Nova IDE" },
-      { property: "og:description", content: "Create console apps, APIs, and Lambdas from a single search." },
+      { property: "og:title", content: "Nova IDE — Create a .NET, Python or Node.js Project" },
+      { property: "og:description", content: "Search a template, spin up a workspace, and start coding in Nova IDE — the in-browser IDE for .NET, Python and Node.js." },
     ],
   }),
   component: NovaIde,
