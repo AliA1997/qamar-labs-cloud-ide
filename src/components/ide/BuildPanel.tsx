@@ -180,8 +180,8 @@ const colorFor = (k: LogLine["kind"]) =>
   : k === "info" ? "text-[color:var(--accent-cyan)]"
   : "text-foreground/85";
 
-export function BuildPanel({ template }: { template: Template }) {
-  const profile = profileFor(template);
+export function BuildPanel({ template, files }: { template: Template; files: IdeFile[] }) {
+  const profile = profileFor(template, files);
   const [lines, setLines] = useState<LogLine[]>([
     { kind: "info", text: `Nova runner ready for ${profile.label}. Try Build or ${profile.runLabel}.` },
   ]);
