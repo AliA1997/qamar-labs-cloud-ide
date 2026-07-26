@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Play, TestTube2, Hammer, Trash2, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Template } from "./Launcher";
+import type { IdeFile } from "@/lib/ide-data";
+import { simulateCsharpConsole } from "@/lib/csharp-sim";
 
 type LogLine = { kind: "out" | "err" | "info" | "ok"; text: string };
 
