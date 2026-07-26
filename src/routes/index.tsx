@@ -1,35 +1,72 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Code2, Zap, BookOpen, Terminal, Save, GitBranch, Boxes } from "lucide-react";
-import { STARTER_PROJECT, type IdeFile } from "@/lib/ide-data";
+import { Code2, Zap, BookOpen, Terminal, Save, GitBranch, Boxes, ArrowLeft } from "lucide-react";
+import { filesForTemplate, type IdeFile } from "@/lib/ide-data";
 import { FileTree } from "@/components/ide/FileTree";
 import { EditorPane } from "@/components/ide/EditorPane";
 import { BuildPanel } from "@/components/ide/BuildPanel";
 import { LambdaTester } from "@/components/ide/LambdaTester";
 import { DocsPanel } from "@/components/ide/DocsPanel";
+import { Launcher, type Template } from "@/components/ide/Launcher";
+import { CreatingScreen } from "@/components/ide/CreatingScreen";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Nova IDE — .NET Projects, Lambda Testing & CLAUDE Docs" },
-      { name: "description", content: "A browser IDE for .NET projects with a Lambda tester and a full guide to building code editors — ready to become a CLAUDE.md spec." },
+      { title: "Nova IDE — Create a .NET, Python or Node.js Project" },
+      { name: "description", content: "Search a template, spin up a workspace, and start coding in Nova IDE — the in-browser IDE for .NET, Python and Node.js." },
       { property: "og:title", content: "Nova IDE" },
-      { property: "og:description", content: "Edit .NET, invoke Lambdas, and learn how to build your own IDE." },
+      { property: "og:description", content: "Create console apps, APIs, and Lambdas from a single search." },
     ],
   }),
   component: NovaIde,
 });
 
 type TopTab = "editor" | "lambda" | "docs";
+type Phase =
+  | { step: "launcher" }
+  | { step: "creating"; template: Template }
+  | { step: "ide"; template: Template; files: IdeFile[] };
 
 function NovaIde() {
-  const [files, setFiles] = useState<IdeFile[]>(STARTER_PROJECT);
-  const [openPaths, setOpenPaths] = useState<string[]>([
-    "src/HelloApi/Program.cs",
-    "src/OrderLambda/Function.cs",
-  ]);
-  const [activePath, setActivePath] = useState("src/HelloApi/Program.cs");
+  const [phase, setPhase] = useState<Phase>({ step: "launcher" });
+
+  if (phase.step === "launcher") {
+    return <Launcher onSelect={(t) => setPhase({ step: "creating", template: t })} />;
+  }
+  if (phase.step === "creating") {
+    return (
+      <CreatingScreen
+        template={phase.template}
+        onDone={() =>
+          setPhase({
+            step: "ide",
+            template: phase.template,
+            files: filesForTemplate(phase.template.id),
+          })
+        }
+      />
+    );
+  }
+
+  return (
+    <IdeWorkspace
+      template={phase.template}
+      initialFiles={phase.files}
+      onExit={() => setPhase({ step: "launcher" })}
+    />
+  );
+}
+
+function IdeWorkspace({
+  template, initialFiles, onExit,
+}: { template: Template; initialFiles: IdeFile[]; onExit: () => void }) {
+  const [files, setFiles] = useState<IdeFile[]>(initialFiles);
+  const [openPaths, setOpenPaths] = useState<string[]>(
+    initialFiles[0] ? [initialFiles[0].path] : [],
+  );
+  const [activePath, setActivePath] = useState(initialFiles[0]?.path ?? "");
   const [tab, setTab] = useState<TopTab>("editor");
 
   const openFiles = openPaths
@@ -54,16 +91,22 @@ function NovaIde() {
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden bg-background text-foreground">
-      {/* Top bar */}
       <header className="flex items-center gap-3 border-b border-border bg-panel px-4 py-2">
+        <button
+          onClick={onExit}
+          className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+          title="New project"
+        >
+          <ArrowLeft className="size-3.5" />
+        </button>
         <div className="flex items-center gap-2">
           <div className="grid size-7 place-items-center rounded-md bg-gradient-brand shadow-glow">
             <Boxes className="size-4 text-primary-foreground" />
           </div>
           <div className="leading-tight">
-            <div className="text-sm font-semibold">Nova IDE</div>
+            <div className="text-sm font-semibold">{template.name}</div>
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              .NET · Python · Node.js · Lambda
+              {template.language} · {template.runtime}
             </div>
           </div>
         </div>
@@ -71,7 +114,6 @@ function NovaIde() {
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <GitBranch className="size-3.5" />
           <span className="font-mono">main</span>
-          <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-[10px] text-foreground/80">NovaIDE.sln</span>
         </div>
 
         <nav className="ml-6 flex items-center gap-1">
@@ -102,12 +144,11 @@ function NovaIde() {
           </button>
           <div className="hidden items-center gap-1 rounded-md bg-secondary px-2 py-1 md:flex">
             <span className="size-1.5 rounded-full bg-[color:var(--success)]" />
-            Runner online · us-east-1
+            Runner online
           </div>
         </div>
       </header>
 
-      {/* Body */}
       <div className="min-h-0 flex-1">
         {tab === "editor" && (
           <div className="grid h-full grid-cols-[240px_1fr]">
