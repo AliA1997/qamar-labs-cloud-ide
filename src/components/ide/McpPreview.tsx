@@ -60,7 +60,14 @@ export function McpPreview({ files, entryPath, framework, runToken }: Props) {
           <span className="text-foreground/40">·</span>
           <span className="text-[color:var(--accent-cyan)]">{info.path}</span>
         </div>
-        <Button size="sm" variant="secondary" onClick={() => setBooting(true) || setTimeout(() => setBooting(false), 500)}>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => {
+            setBooting(true);
+            setTimeout(() => setBooting(false), 500);
+          }}
+        >
           <RefreshCw className={cn("size-3.5", booting && "animate-spin")} /> Reload
         </Button>
       </div>
