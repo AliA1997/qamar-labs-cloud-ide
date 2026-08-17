@@ -352,6 +352,8 @@ function pick(prefixes: string[]): IdeFile[] {
 }
 
 export function filesForTemplate(id: string): IdeFile[] {
+  const extra = extraFilesForTemplate(id);
+  if (extra) return extra;
   switch (id) {
     case "dotnet-console": return [...CONSOLE_APP, README];
     case "dotnet-webapi": return [...pick(["src/HelloApi/"]), README];
@@ -365,3 +367,282 @@ export function filesForTemplate(id: string): IdeFile[] {
   }
 }
 
+
+const MCP_FASTMCP: IdeFile[] = [
+  {
+    path: "app/server.py",
+    language: "python",
+    content: `from fastmcp import FastMCP
+
+mcp = FastMCP("Nova Tools")
+
+
+@mcp.tool()
+def greet(name: str) -> str:
+    """Return a friendly greeting for the given name."""
+    return f"Hello, {name}! Welcome to MCP."
+
+
+@mcp.tool()
+def add(a: int, b: int) -> int:
+    """Add two numbers together."""
+    return a + b
+
+
+@mcp.tool()
+def shout(text: str) -> str:
+    """Uppercase the given text."""
+    return text.upper()
+
+
+if __name__ == "__main__":
+    mcp.run(transport="http", port=8000)
+`,
+  },
+  {
+    path: "app/requirements.txt",
+    language: "markdown",
+    content: `fastmcp>=2.3.0
+uvicorn>=0.30.0
+`,
+  },
+  {
+    path: "app/test_server.py",
+    language: "python",
+    content: `from server import greet, add
+
+
+def test_greet():
+    assert greet("Ada").startswith("Hello, Ada")
+
+
+def test_add():
+    assert add(2, 3) == 5
+`,
+  },
+  {
+    path: "README.md",
+    language: "markdown",
+    content: `# FastMCP Server
+
+Edit \`app/server.py\`, hit **Save all**, and the runner restarts the server and
+refreshes the **Preview** tab at \`http://localhost:8000\`.
+
+Every function decorated with \`@mcp.tool()\` shows up in the preview's tool
+inspector, where you can call it with real arguments.
+
+Connect a client with:
+
+\`\`\`json
+{ "mcpServers": { "nova": { "url": "http://localhost:8000/mcp" } } }
+\`\`\`
+`,
+  },
+];
+
+const MCP_GRADIO: IdeFile[] = [
+  {
+    path: "app/app.py",
+    language: "python",
+    content: `import gradio as gr
+
+
+def letter_counter(word: str, letter: str) -> int:
+    """Count how many times a letter appears in a word."""
+    return word.lower().count(letter.lower())
+
+
+demo = gr.Interface(
+    fn=letter_counter,
+    inputs=["text", "text"],
+    outputs="number",
+    title="Letter Counter",
+    description="Counts occurrences of a letter inside a word.",
+)
+
+if __name__ == "__main__":
+    demo.launch(mcp_server=True, server_port=7860)
+`,
+  },
+  {
+    path: "app/requirements.txt",
+    language: "markdown",
+    content: `gradio[mcp]>=5.0.0
+`,
+  },
+  {
+    path: "README.md",
+    language: "markdown",
+    content: `# Gradio MCP Server
+
+Gradio can expose any \`gr.Interface\` function as an MCP tool by launching with
+\`mcp_server=True\`.
+
+Edit \`app/app.py\`, press **Save all**, and the **Preview** tab reloads the app
+at \`http://localhost:7860\` with the MCP endpoint at
+\`http://localhost:7860/gradio_api/mcp/sse\`.
+`,
+  },
+];
+
+const PROBLEM_MD: IdeFile = {
+  path: "PROBLEM.md",
+  language: "markdown",
+  content: `# Practice problem — Hello, World!
+
+Implement \`solution\` so that it returns the exact string:
+
+\`\`\`
+Hello, World!
+\`\`\`
+
+Edit the solution file, press **Save all**, and the test runner re-executes the
+test file against your code.
+`,
+};
+
+const PRACTICE_JS: IdeFile[] = [
+  {
+    path: "src/solution.js",
+    language: "javascript",
+    content: `// Return the string "Hello, World!"
+function solution() {
+  return "Hello, World!";
+}
+
+module.exports = { solution };
+`,
+  },
+  {
+    path: "tests/solution.test.js",
+    language: "javascript",
+    content: `const assert = require("node:assert");
+const { test } = require("node:test");
+const { solution } = require("../src/solution");
+
+test("solution() is callable and returns a value", () => {
+  assert.notStrictEqual(solution(), undefined);
+});
+
+test("solution() returns a string", () => {
+  assert.strictEqual(typeof solution(), "string");
+});
+
+test('solution() returns exactly "Hello, World!"', () => {
+  assert.strictEqual(solution(), "Hello, World!");
+});
+`,
+  },
+  PROBLEM_MD,
+];
+
+const PRACTICE_TS: IdeFile[] = [
+  {
+    path: "src/solution.ts",
+    language: "typescript",
+    content: `// Return the string "Hello, World!"
+export function solution(): string {
+  return "Hello, World!";
+}
+`,
+  },
+  {
+    path: "tests/solution.test.ts",
+    language: "typescript",
+    content: `import { describe, expect, it } from "vitest";
+import { solution } from "../src/solution";
+
+describe("solution", () => {
+  it("is callable and returns a value", () => {
+    expect(solution()).toBeDefined();
+  });
+
+  it("returns a string", () => {
+    expect(typeof solution()).toBe("string");
+  });
+
+  it('returns exactly "Hello, World!"', () => {
+    expect(solution()).toBe("Hello, World!");
+  });
+});
+`,
+  },
+  PROBLEM_MD,
+];
+
+const PRACTICE_PY: IdeFile[] = [
+  {
+    path: "src/solution.py",
+    language: "python",
+    content: `def solution():
+    """Return the string "Hello, World!"."""
+    return "Hello, World!"
+`,
+  },
+  {
+    path: "tests/test_solution.py",
+    language: "python",
+    content: `from src.solution import solution
+
+
+def test_returns_value():
+    assert solution() is not None
+
+
+def test_returns_string():
+    assert isinstance(solution(), str)
+
+
+def test_returns_hello_world():
+    assert solution() == "Hello, World!"
+`,
+  },
+  PROBLEM_MD,
+];
+
+const PRACTICE_CS: IdeFile[] = [
+  {
+    path: "src/Solution.cs",
+    language: "csharp",
+    content: `public static class Problem
+{
+    // Return the string "Hello, World!"
+    public static string Solution()
+    {
+        return "Hello, World!";
+    }
+}
+`,
+  },
+  {
+    path: "tests/SolutionTests.cs",
+    language: "csharp",
+    content: `using Xunit;
+
+public class SolutionTests
+{
+    [Fact]
+    public void Returns_A_Value() => Assert.NotNull(Problem.Solution());
+
+    [Fact]
+    public void Returns_A_String() => Assert.IsType<string>(Problem.Solution());
+
+    [Fact]
+    public void Returns_Hello_World() => Assert.Equal("Hello, World!", Problem.Solution());
+}
+`,
+  },
+  PROBLEM_MD,
+];
+
+export function extraFilesForTemplate(id: string): IdeFile[] | null {
+  switch (id) {
+    case "python-mcp-fastmcp": return MCP_FASTMCP;
+    case "python-mcp-gradio": return MCP_GRADIO;
+    case "practice-javascript": return PRACTICE_JS;
+    case "practice-typescript": return PRACTICE_TS;
+    case "practice-python": return PRACTICE_PY;
+    case "practice-csharp": return PRACTICE_CS;
+    default: return null;
+  }
+}
