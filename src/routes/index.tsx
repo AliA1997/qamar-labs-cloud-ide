@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Code2, Zap, BookOpen, Terminal, Save, GitBranch, Boxes, ArrowLeft } from "lucide-react";
+import { Code2, Zap, BookOpen, Terminal, Save, GitBranch, Boxes, ArrowLeft, Globe, FlaskConical } from "lucide-react";
 import { filesForTemplate, type IdeFile } from "@/lib/ide-data";
 import { FileTree } from "@/components/ide/FileTree";
 import { EditorPane } from "@/components/ide/EditorPane";
@@ -8,6 +8,8 @@ import { BuildPanel } from "@/components/ide/BuildPanel";
 import { LambdaTester } from "@/components/ide/LambdaTester";
 import { DocsPanel } from "@/components/ide/DocsPanel";
 import { Launcher, type Template } from "@/components/ide/Launcher";
+import { McpPreview } from "@/components/ide/McpPreview";
+import { TestPanel } from "@/components/ide/TestPanel";
 import { CreatingScreen } from "@/components/ide/CreatingScreen";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +25,7 @@ export const Route = createFileRoute("/")({
   component: NovaIde,
 });
 
-type TopTab = "editor" | "lambda" | "docs";
+type TopTab = "editor" | "preview" | "lambda" | "docs";
 type Phase =
   | { step: "launcher" }
   | { step: "creating"; template: Template }
@@ -68,6 +70,13 @@ function IdeWorkspace({
   );
   const [activePath, setActivePath] = useState(initialFiles[0]?.path ?? "");
   const [tab, setTab] = useState<TopTab>("editor");
+  const [runToken, setRunToken] = useState(0);
+  const isMcp = template.kind === "mcp-fastmcp" || template.kind === "mcp-gradio";
+  const isPractice = template.kind === "practice";
+  const saveAll = () => {
+    setRunToken((n) => n + 1);
+    if (isMcp) setTab("preview");
+  };
 
   const openFiles = openPaths
     .map((p) => files.find((f) => f.path === p))
@@ -119,6 +128,7 @@ function IdeWorkspace({
         <nav className="ml-6 flex items-center gap-1">
           {([
             { id: "editor", icon: Code2, label: "Editor" },
+            ...(isMcp ? [{ id: "preview", icon: Globe, label: "Preview" } as const] : []),
             { id: "lambda", icon: Zap, label: "Lambda Tester" },
             { id: "docs", icon: BookOpen, label: "Docs / CLAUDE" },
           ] as const).map((t) => (
@@ -139,7 +149,7 @@ function IdeWorkspace({
         </nav>
 
         <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-          <button className="flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:bg-accent">
+          <button onClick={saveAll} className="flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:bg-accent">
             <Save className="size-3.5" /> Save all
           </button>
           <div className="hidden items-center gap-1 rounded-md bg-secondary px-2 py-1 md:flex">
@@ -169,17 +179,35 @@ function IdeWorkspace({
               <div className="min-h-0 border-t border-border">
                 <div className="flex items-center gap-4 border-b border-border bg-panel px-3 py-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
                   <span className="flex items-center gap-1 text-foreground">
-                    <Terminal className="size-3.5" /> Runner
+                    {isPractice ? <FlaskConical className="size-3.5" /> : <Terminal className="size-3.5" />}
+                    {isPractice ? "Tests" : "Runner"}
                   </span>
                   <span>Problems</span>
                   <span>Output</span>
                 </div>
                 <div className="h-[calc(100%-30px)]">
-                  <BuildPanel template={template} files={files} />
+                  {isPractice && template.practiceLanguage ? (
+                    <TestPanel
+                      language={template.practiceLanguage}
+                      source={files.find((f) => f.path === template.entryPath)?.content ?? ""}
+                      testFile={files.find((f) => f.path.includes("test") || f.path.includes("Test"))?.path ?? "tests/"}
+                      runToken={runToken}
+                    />
+                  ) : (
+                    <BuildPanel template={template} files={files} />
+                  )}
                 </div>
               </div>
             </div>
           </div>
+        )}
+        {tab === "preview" && isMcp && (
+          <McpPreview
+            files={files}
+            entryPath={template.entryPath ?? ""}
+            framework={template.kind === "mcp-gradio" ? "gradio" : "fastmcp"}
+            runToken={runToken}
+          />
         )}
         {tab === "lambda" && <LambdaTester />}
         {tab === "docs" && <DocsPanel />}

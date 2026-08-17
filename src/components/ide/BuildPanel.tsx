@@ -163,6 +163,47 @@ function profileFor(t: Template, files: IdeFile[]): RunProfile {
         ],
         stopLine: { kind: "err", text: "^C — server stopped (SIGINT)" },
       };
+    case "python-mcp-fastmcp":
+      return {
+        label: "FastMCP",
+        runLabel: "Run Server",
+        build: [
+          { kind: "info", text: "$ pip install -r app/requirements.txt" },
+          { kind: "ok", text: "Successfully installed fastmcp uvicorn" },
+        ],
+        test: [
+          { kind: "info", text: "$ pytest app -q" },
+          { kind: "ok", text: "2 passed in 0.06s" },
+        ],
+        runKeepAlive: true,
+        run: [
+          { kind: "info", text: "$ python app/server.py" },
+          { kind: "out", text: "FastMCP server starting (transport=http)" },
+          { kind: "out", text: "Uvicorn running on http://localhost:8000 (Press CTRL+C to quit)" },
+          { kind: "ok", text: "MCP endpoint ready at http://localhost:8000/mcp — open the Preview tab" },
+        ],
+        stopLine: { kind: "err", text: "^C — FastMCP server stopped (SIGINT)" },
+      };
+    case "python-mcp-gradio":
+      return {
+        label: "Gradio MCP",
+        runLabel: "Run App",
+        build: [
+          { kind: "info", text: "$ pip install -r app/requirements.txt" },
+          { kind: "ok", text: "Successfully installed gradio" },
+        ],
+        test: [
+          { kind: "info", text: "$ pytest -q" },
+          { kind: "ok", text: "no tests ran in 0.01s" },
+        ],
+        runKeepAlive: true,
+        run: [
+          { kind: "info", text: "$ python app/app.py" },
+          { kind: "out", text: "Running on local URL:  http://localhost:7860" },
+          { kind: "ok", text: "MCP server ready at http://localhost:7860/gradio_api/mcp/sse — open the Preview tab" },
+        ],
+        stopLine: { kind: "err", text: "^C — Gradio app stopped (SIGINT)" },
+      };
     default:
       return {
         label: "Runner",
