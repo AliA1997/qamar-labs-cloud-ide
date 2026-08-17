@@ -87,3 +87,27 @@ export function simulateCsharpConsole(source: string): { output: string[]; ok: b
   }
   return { output: out, ok: true };
 }
+
+/**
+ * Evaluate the return value of a `Solution()`-style method for the code
+ * problem template. Handles string/var locals and literal/interpolated
+ * returns.
+ */
+export function evaluateCsharpSolution(
+  source: string,
+): { ok: boolean; value?: string; error?: string } {
+  const src = stripComments(source);
+  if (!/\bSolution\s*\(/.test(src)) {
+    return { ok: false, error: "CS0103: no method named 'Solution' was found." };
+  }
+  const vars: Vars = {};
+  const assignRe = /\b(?:var|string)\s+([A-Za-z_]\w*)\s*=\s*([^;]+);/g;
+  let m: RegExpExecArray | null;
+  while ((m = assignRe.exec(src)) !== null) vars[m[1]] = resolveExpr(m[2], vars);
+
+  const returns = [...src.matchAll(/\breturn\s+([^;]+);/g)];
+  if (returns.length === 0) {
+    return { ok: false, error: "CS0161: 'Solution()' does not return a value on all code paths." };
+  }
+  return { ok: true, value: resolveExpr(returns[returns.length - 1][1], vars) };
+}
