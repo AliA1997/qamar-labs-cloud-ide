@@ -66,7 +66,7 @@ export function runSolution(language: PracticeLanguage, source: string): RunResu
       return { ok: r.ok, value: r.value, logs: r.logs, error: r.error };
     }
     const r = evaluateCsharpSolution(source);
-    return { ok: r.ok, value: r.value, logs: [], error: r.error };
+    return { ok: r.ok, value: r.value, logs: r.logs, error: r.error };
   } catch (err) {
     return { ok: false, logs, error: `${(err as Error).name}: ${(err as Error).message}` };
   }
