@@ -237,6 +237,9 @@ function transform(text: string): string {
     "$1 $2",
   );
 
+  // const / readonly modifiers on locals
+  s = s.replace(/\b(?:readonly|const)\s+(?=[A-Za-z_])/g, "");
+
   // loops
   s = s.replace(
     new RegExp(`\\bforeach\\s*\\(\\s*(?:${PRIMS}|[\\w<>,.\\[\\]?]+)\\s+([A-Za-z_]\\w*)\\s+in\\s+`, "g"),
@@ -335,8 +338,6 @@ function transform(text: string): string {
   s = s.replace(/\((?:string|char|object)\)\s*/g, "");
 
   // misc keywords
-  s = s.replace(/\bthis\./g, "this.");
-  s = s.replace(/\breadonly\b|\bconst\s+(?=[A-Za-z_])/g, "");
   s = s.replace(/\b(\w+)\s+is\s+null\b/g, "$1 === null");
 
   return s;
@@ -351,6 +352,7 @@ function transpile(source: string): { code: string; classNames: string[] } {
 }
 
 const RUNTIME = `
+const args = [];
 const __out = [];
 const __writeLine = (v) => { const s = v === undefined ? "" : __str(v); for (const line of String(s).split("\\n")) __out.push({ nl: true, text: line }); };
 const __write = (v) => { __out.push({ nl: false, text: v === undefined ? "" : __str(v) }); };
