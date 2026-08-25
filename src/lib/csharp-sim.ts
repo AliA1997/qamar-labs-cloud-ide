@@ -188,6 +188,9 @@ function transform(text: string): string {
   s = s.replace(/^\s*using\s+(static\s+)?[\w.=\s<>,]+;\s*$/gm, "");
   s = s.replace(/^\s*namespace\s+[\w.]+\s*;\s*$/gm, "");
   s = s.replace(/\bnamespace\s+[\w.]+\s*\{/g, "{");
+  // fully-qualified BCL references: System.Console.WriteLine -> Console.WriteLine
+  s = s.replace(/\bSystem\.(?:Text\.|Collections\.Generic\.|Linq\.|IO\.)?(?=[A-Z])/g, "");
+
   // attributes on their own line
   s = s.replace(/^\s*\[[^\]\n]*\]\s*$/gm, "");
 
