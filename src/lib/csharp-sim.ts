@@ -478,3 +478,8 @@ export function evaluateCsharpSolution(
   });
   return { ok: res.ok, value: res.value, logs: res.output, error: res.error };
 }
+
+/** Exposed for debugging/tests: returns the generated JavaScript. */
+export function __debugTranspile(source: string): string {
+  return transpile(source).code;
+}
