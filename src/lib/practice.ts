@@ -52,15 +52,38 @@ export function runSolution(language: PracticeLanguage, source: string): RunResu
   try {
     if (language === "javascript" || language === "typescript") {
       const code = language === "typescript" ? stripTypes(source) : source.replace(/\bexport\s+/g, "");
-      const body = `"use strict";\n${code}\nif (typeof solution !== "function") { throw new Error("No function named 'solution' was found."); }\nreturn solution();`;
+      const body = `"use strict";
+const exports = module.exports;
+${code}
+let __fn = typeof solution === "function" ? solution : undefined;
+if (!__fn) {
+  const __e = module.exports || {};
+  __fn = typeof __e.solution === "function" ? __e.solution
+    : typeof __e.default === "function" ? __e.default
+    : typeof __e === "function" ? __e : undefined;
+}
+if (typeof __fn !== "function") { throw new Error("No function named 'solution' was found."); }
+return __fn();`;
       // eslint-disable-next-line no-new-func
-      const fn = new Function("console", body) as (c: unknown) => unknown;
-      const value = fn({
-        log: (...a: unknown[]) => logs.push(a.map(String).join(" ")),
-        error: (...a: unknown[]) => logs.push(a.map(String).join(" ")),
-      });
+      const fn = new Function("console", "module", "require", body) as (
+        c: unknown, m: unknown, r: unknown,
+      ) => unknown;
+      const mod = { exports: {} as Record<string, unknown> };
+      const value = fn(
+        {
+          log: (...a: unknown[]) => logs.push(a.map(String).join(" ")),
+          error: (...a: unknown[]) => logs.push(a.map(String).join(" ")),
+          warn: (...a: unknown[]) => logs.push(a.map(String).join(" ")),
+          info: (...a: unknown[]) => logs.push(a.map(String).join(" ")),
+        },
+        mod,
+        (name: string) => {
+          throw new Error(`Cannot require('${name}') in the browser runner.`);
+        },
+      );
       return { ok: true, value, logs };
     }
+
     if (language === "python") {
       const r = callPythonFunction(source, "solution");
       return { ok: r.ok, value: r.value, logs: r.logs, error: r.error };

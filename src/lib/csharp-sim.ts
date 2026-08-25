@@ -188,6 +188,9 @@ function transform(text: string): string {
   s = s.replace(/^\s*using\s+(static\s+)?[\w.=\s<>,]+;\s*$/gm, "");
   s = s.replace(/^\s*namespace\s+[\w.]+\s*;\s*$/gm, "");
   s = s.replace(/\bnamespace\s+[\w.]+\s*\{/g, "{");
+  // fully-qualified BCL references: System.Console.WriteLine -> Console.WriteLine
+  s = s.replace(/\bSystem\.(?:Text\.|Collections\.Generic\.|Linq\.|IO\.)?(?=[A-Z])/g, "");
+
   // attributes on their own line
   s = s.replace(/^\s*\[[^\]\n]*\]\s*$/gm, "");
 
@@ -471,15 +474,33 @@ export function simulateCsharpConsole(source: string): { output: string[]; ok: b
 export function evaluateCsharpSolution(
   source: string,
 ): { ok: boolean; value?: unknown; logs: string[]; error?: string } {
-  if (!/\bSolution\s*\(/.test(source)) {
+  const names = ["Solution", "solution", "Solve", "Run", "Main"];
+  if (!names.some((n) => new RegExp(`\\b${n}\\s*\\(`).test(source))) {
     return { ok: false, logs: [], error: "CS0103: no method named 'Solution' was found." };
   }
   const res = execute(source, (classes) => {
     const list = JSON.stringify(classes);
-    return `if (typeof Solution === "function") { __value = Solution(); } else { let __done = false; for (const __c of ${list}) { try { const __k = eval(__c); if (__k && typeof __k.Solution === "function") { __value = __k.Solution(); __done = true; break; } if (__k && typeof __k.prototype?.Solution === "function") { __value = new __k().Solution(); __done = true; break; } } catch (e) { if (__done) throw e; } } if (!__done && __value === undefined) throw new Error("CS0103: no callable 'Solution' was found."); }`;
+    const ns = JSON.stringify(names);
+    return `{
+  let __done = false;
+  for (const __n of ${ns}) {
+    try { const __f = eval(typeof __n === "string" ? __n : ""); if (typeof __f === "function") { __value = __f(); __done = true; break; } } catch (e) { /* not defined */ }
+  }
+  if (!__done) {
+    outer: for (const __c of ${list}) {
+      let __k; try { __k = eval(__c); } catch (e) { continue; }
+      for (const __n of ${ns}) {
+        if (__k && typeof __k[__n] === "function") { __value = __k[__n](); __done = true; break outer; }
+        if (__k && typeof __k.prototype?.[__n] === "function") { __value = new __k()[__n](); __done = true; break outer; }
+      }
+    }
+  }
+  if (!__done) throw new Error("CS0103: no callable 'Solution' was found.");
+}`;
   });
   return { ok: res.ok, value: res.value, logs: res.output, error: res.error };
 }
+
 
 /** Exposed for debugging/tests: returns the generated JavaScript. */
 export function __debugTranspile(source: string): string {
